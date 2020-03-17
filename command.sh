@@ -1,0 +1,1 @@
+# docker run -v $PWD/migrations:/migrations --network host migrate/migrate -path=/migrations/ -database "postgresql://root:root@localhost:5432/mep_db?sslmode=disable" up or down

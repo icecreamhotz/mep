@@ -1,0 +1,19 @@
+mode: "develop"
+port: 8000
+
+redis_address: "redis:6379"
+
+postgres-develop:
+  username: "root"
+  password: "root"
+  database: "mep_db"
+  address: "db:5432"
+
+postgres-production:
+  username: "root"
+  password: "root"
+  database: "mep_db"
+  address: "db:5432"
+
+access_token_secret: "jdiqwuj92j9dcjqwda"
+refresh_token_secret: "#@!&cmqwij982nc@32mx"
