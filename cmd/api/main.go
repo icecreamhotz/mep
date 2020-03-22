@@ -23,6 +23,7 @@ func main() {
 	v1 := router.Group("/api/v1")
 	routes.RouterBackofficeUser(v1, app.UserHandler)
 	routes.RouterAuthenticate(v1, app.AuthHandler)
+	routes.RouterTodoLists(v1, app.TodoListHandler)
 
 	router.Run(":" + viper.GetString("port"))
 }

@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -12,4 +14,9 @@ func SplitTokenFromHeader(token string) (string, bool) {
 	token = strings.TrimSpace(splitToken[1])
 
 	return token, true
+}
+
+func GetBaseDirectory() (string, error) {
+	baseDir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+	return baseDir, err
 }

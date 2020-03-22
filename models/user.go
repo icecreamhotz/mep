@@ -4,10 +4,11 @@ import (
 	"time"
 
 	"github.com/go-pg/pg/v9"
+	"github.com/gofrs/uuid"
 )
 
 type UserReporer interface {
-	GetById(id string) (BackofficeUser, error)
+	GetById(id uuid.UUID) (BackofficeUser, error)
 	FindByUsername(username string) (BackofficeUser, error)
 	FindByEmail(email string) (BackofficeUser, error)
 	Create(backofficeUser BackofficeUser) error
@@ -19,7 +20,7 @@ type UserRepository struct {
 
 type BackofficeUser struct {
 	tableName       struct{}  `pg:"backoffice_users"`
-	ID              string    `pg:"type:uuid,pk,column_name:id"`
+	ID              uuid.UUID `pg:"type:uuid,pk,column_name:id"`
 	Username        string    `pg:"column_name:username,unique" json:"username" binding:"required"`
 	Password        string    `pg:"column_name:username" json:"password" binding:"required,min=8"`
 	ConfirmPassword string    `pg:"-" json:"confirm_password" binding:"required,min=8,eqfield=Password"`
@@ -27,9 +28,9 @@ type BackofficeUser struct {
 	Name            string    `pg:"column_name:name" json:"name" binding:"required"`
 	Lastname        string    `pg:"column_name:lastname" json:"lastname" binding:"required"`
 	Role            string    `pg:"column_name:role" json:"role" binding:"required,oneof=ADMIN EMPLOYEE"`
-	CreatedAt       time.Time `pg:"column_name:created_at,null"`
-	UpdatedAt       time.Time `pg:"column_name:updated_at,null"`
-	DeletedAt       time.Time `pg:"column_name:deleted_at,soft_delete"`
+	CreatedAt       time.Time `pg:"column_name:created_at,null" json:"created_at"`
+	UpdatedAt       time.Time `pg:"column_name:updated_at,null" json:"updated_at"`
+	DeletedAt       time.Time `pg:"column_name:deleted_at,soft_delete" json:"deleted_at"`
 }
 
 func NewUserRepository(db *pg.DB) UserReporer {
@@ -38,7 +39,7 @@ func NewUserRepository(db *pg.DB) UserReporer {
 	}
 }
 
-func (repo *UserRepository) GetById(id string) (BackofficeUser, error) {
+func (repo *UserRepository) GetById(id uuid.UUID) (BackofficeUser, error) {
 	backofficeUser := BackofficeUser{
 		ID: id,
 	}

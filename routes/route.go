@@ -21,3 +21,12 @@ func RouterAuthenticate(router *gin.RouterGroup, handler controllers.AuthHandler
 		authRoute.GET("/payload", middlewares.Authenticated(), handler.AuthPayloadGet)
 	}
 }
+
+func RouterTodoLists(router *gin.RouterGroup, handler controllers.TodoListHandler) {
+	todoListRoute := router.Group("/todo-list")
+	{
+		todoListRoute.POST("/", handler.TodoListPost)
+		todoListRoute.GET("/", handler.TodoListGet)
+		todoListRoute.PATCH("/done/:id", handler.TodoListDonePatch)
+	}
+}

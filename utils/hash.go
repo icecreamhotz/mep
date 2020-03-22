@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
+	"github.com/gofrs/uuid"
 	"github.com/icecreamhotz/mep-api/configs"
 	"github.com/spf13/viper"
 	"golang.org/x/crypto/bcrypt"
@@ -16,15 +17,15 @@ const AccessTokenMinute = 24 * 60
 const RefreshTokenMinute = 24 * 7 * 60
 
 type AccessTokenClaims struct {
-	ID       string `json:"id"`
-	Name     string `json:"name"`
-	Lastname string `json:"lastname"`
-	Role     string `json:"role"`
+	ID       uuid.UUID `json:"id"`
+	Name     string    `json:"name"`
+	Lastname string    `json:"lastname"`
+	Role     string    `json:"role"`
 	jwt.StandardClaims
 }
 
 type RefreshTokenClaims struct {
-	ID string
+	ID uuid.UUID
 	jwt.StandardClaims
 }
 
@@ -56,7 +57,7 @@ func GenerateRefreshToken(claim *RefreshTokenClaims) (string, error) {
 	return tokenString, nil
 }
 
-func SetAccessTokenAndRefreshToken(id, name, lastname, role string) (string, string, time.Time, error) {
+func SetAccessTokenAndRefreshToken(id uuid.UUID, name, lastname, role string) (string, string, time.Time, error) {
 	expirationTimeAccessToken := time.Now().Add(time.Minute * time.Duration(AccessTokenMinute))
 	expirationTimeRefreshToken := time.Now().Add(time.Minute * time.Duration(RefreshTokenMinute))
 

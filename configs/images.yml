@@ -1,0 +1,7 @@
+base_dir:
+  todo_list:
+    path: "images/todo_list"
+    size:
+      l: 768
+      m: 375
+      s: 150

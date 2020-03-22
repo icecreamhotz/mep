@@ -17,9 +17,11 @@ func InitialApplication() (server.App, error) {
 		configs.ConfigDatabase,
 		configs.NewDatatabase,
 		models.NewUserRepository,
+		models.NewTodolistRepository,
 		server.NewValidateTranslation,
 		controllers.NewUserHandler,
 		controllers.NewAuthHandler,
+		controllers.NewTodoListHandler,
 		server.NewApplication,
 	)
 	return server.App{}, nil

@@ -7,6 +7,10 @@ import (
 func InitConfigs() error {
 	viper.AddConfigPath("./configs")
 	viper.SetConfigName("configs")
+	viper.ReadInConfig()
 
-	return viper.ReadInConfig()
+	viper.AddConfigPath("./configs")
+	viper.SetConfigName("images")
+
+	return viper.MergeInConfig()
 }

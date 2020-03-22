@@ -3,3 +3,4 @@ go.mod
 go.sum
 main
 cmd/api/wire_gen.go
+public/images

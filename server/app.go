@@ -10,8 +10,9 @@ import (
 )
 
 type App struct {
-	UserHandler controllers.UserHandler
-	AuthHandler controllers.AuthHandler
+	UserHandler     controllers.UserHandler
+	AuthHandler     controllers.AuthHandler
+	TodoListHandler controllers.TodoListHandler
 }
 
 func NewValidateTranslation() ut.Translator {
@@ -21,14 +22,29 @@ func NewValidateTranslation() ut.Translator {
 		uni := ut.New(en, en)
 		trans, _ = uni.GetTranslator("en")
 		en_translations.RegisterDefaultTranslations(v, trans)
+		v.RegisterValidation("bool", func(fl validator.FieldLevel) bool {
+			if value := fl.Field().String(); value == "" {
+				return false
+			}
+			return true
+		})
+		v.RegisterTranslation("bool", trans, func(ut ut.Translator) error {
+			return ut.Add("bool", "{0} is a required boolean value.", true)
+		}, func(ut ut.Translator, fe validator.FieldError) string {
+			t, _ := ut.T("bool", fe.Field())
+			return t
+		})
 	}
 
 	return trans
 }
 
-func NewApplication(userHandler controllers.UserHandler, authHandler controllers.AuthHandler) App {
+func NewApplication(userHandler controllers.UserHandler,
+	authHandler controllers.AuthHandler,
+	todoListHandler controllers.TodoListHandler) App {
 	return App{
-		UserHandler: userHandler,
-		AuthHandler: authHandler,
+		UserHandler:     userHandler,
+		AuthHandler:     authHandler,
+		TodoListHandler: todoListHandler,
 	}
 }

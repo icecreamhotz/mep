@@ -37,7 +37,7 @@ func (handler *UserHandler) BackofficeUserPost(c *gin.Context) {
 		return
 	}
 
-	if backofficeUser.ID != "" {
+	if backofficeUser.ID.String() != "" {
 		c.JSON(http.StatusConflict, utils.ResponseErrorFields([]map[string]string{{
 			"username": "Duplicate Username.",
 		}}))
@@ -51,7 +51,7 @@ func (handler *UserHandler) BackofficeUserPost(c *gin.Context) {
 		return
 	}
 
-	if backofficeUser.ID != "" {
+	if backofficeUser.ID.String() != "" {
 		c.JSON(http.StatusConflict, utils.ResponseErrorFields([]map[string]string{{
 			"username": "Duplicate Email.",
 		}}))

@@ -7,6 +7,7 @@ import (
 	"github.com/go-pg/pg/v9"
 	ut "github.com/go-playground/universal-translator"
 	"github.com/go-redis/redis/v7"
+	"github.com/gofrs/uuid"
 	"github.com/icecreamhotz/mep-api/configs"
 	"github.com/icecreamhotz/mep-api/models"
 	"github.com/icecreamhotz/mep-api/utils"
@@ -82,12 +83,18 @@ func (handler *AuthHandler) AuthRefreshTokenPost(c *gin.Context) {
 
 	client := configs.ConnectCacheDatabase()
 
-	userId, err := client.HGet("refresh_token:"+token.RefreshToken, "user_id").Result()
+	userIdString, err := client.HGet("refresh_token:"+token.RefreshToken, "user_id").Result()
 	if err != nil {
 		if err == redis.Nil {
 			c.JSON(http.StatusUnauthorized, utils.ResponseMessage("Unauthorized."))
 			return
 		}
+		c.JSON(http.StatusInternalServerError, utils.ResponseServerError("Something went wrong."))
+		return
+	}
+
+	userId, err := uuid.FromString(userIdString)
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, utils.ResponseServerError("Something went wrong."))
 		return
 	}

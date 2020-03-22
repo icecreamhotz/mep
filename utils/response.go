@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"strconv"
 	"time"
 
 	ut "github.com/go-playground/universal-translator"
@@ -84,6 +85,11 @@ func ResponseErrorFields(errors []map[string]string) UnProcessEntity {
 }
 
 func ResponseErrorValidation(translator ut.Translator, err error) UnProcessEntity {
+	if _, ok := err.(*strconv.NumError); ok {
+		return ResponseErrorFields([]map[string]string{{
+			"done": "Done must be accept boolean value only",
+		}})
+	}
 	errs := err.(validator.ValidationErrors)
 	invalidFields := make([]map[string]string, 0)
 	for _, e := range errs {
