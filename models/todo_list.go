@@ -1,6 +1,7 @@
 package models
 
 import (
+	"context"
 	"log"
 	"mime/multipart"
 	"time"
@@ -12,7 +13,10 @@ import (
 type TodoListReporer interface {
 	Create(todoList TodoLists) error
 	UpdateDoneStatus(todoListID uuid.UUID) (TodoLists, error)
+	Update(todoList *TodoLists) error
 	GetAll() ([]TodoLists, int, error)
+	GetById(todoListID uuid.UUID) (TodoLists, error)
+	DeleteById(todoListID uuid.UUID) error
 }
 
 type TodoListRepository struct {
@@ -23,7 +27,7 @@ type TodoLists struct {
 	tableName struct{}              `pg:"todo_lists"`
 	ID        uuid.UUID             `pg:"type:uuid,pk,column_name:id" json:"id"`
 	Name      string                `pg:"column_name:name" form:"name" json:"name" binding:"required"`
-	Done      *bool                 `pg:"column_name:done,type:boolen" form:"done" json:"done" binding:"bool"`
+	Done      *bool                 `pg:"column_name:done,use_zero" form:"done" json:"done" binding:"bool"`
 	ImageFile *multipart.FileHeader `form:"image" pg:"-"`
 	Image     string                `pg:"column_name:image" json:"image"`
 	CreatedAt time.Time             `pg:"column_name:created_at,null" json:"created_at"`
@@ -31,10 +35,34 @@ type TodoLists struct {
 	DeletedAt time.Time             `pg:"column_name:deleted_at,soft_delete" json:"deleted_at"`
 }
 
+var _ pg.BeforeInsertHook = (*TodoLists)(nil)
+
+func (t *TodoLists) BeforeInsert(ctx context.Context) (context.Context, error) {
+	if t.CreatedAt.IsZero() {
+		t.CreatedAt = time.Now()
+	}
+	return ctx, nil
+}
+
+var _ pg.BeforeUpdateHook = (*TodoLists)(nil)
+
+func (t *TodoLists) BeforeUpdate(ctx context.Context) (context.Context, error) {
+	t.UpdatedAt = time.Now()
+	return ctx, nil
+}
+
 func NewTodolistRepository(db *pg.DB) TodoListReporer {
 	return &TodoListRepository{
 		DB: db,
 	}
+}
+
+func (repo *TodoListRepository) GetById(id uuid.UUID) (TodoLists, error) {
+	todoList := TodoLists{
+		ID: id,
+	}
+	err := repo.DB.Select(&todoList)
+	return todoList, err
 }
 
 func (repo *TodoListRepository) Create(todoList TodoLists) error {
@@ -58,11 +86,8 @@ func (repo *TodoListRepository) UpdateDoneStatus(todoListID uuid.UUID) (TodoList
 	}
 
 	_, err = repo.DB.Model(&todoList).Column("done").WherePK().Returning("*").Update()
-	if err != nil {
-		return TodoLists{}, err
-	}
 
-	return todoList, nil
+	return todoList, err
 }
 
 func (repo *TodoListRepository) GetAll() ([]TodoLists, int, error) {
@@ -72,4 +97,17 @@ func (repo *TodoListRepository) GetAll() ([]TodoLists, int, error) {
 		log.Fatal(err)
 	}
 	return todoLists, len(todoLists), nil
+}
+
+func (repo *TodoListRepository) Update(todoList *TodoLists) error {
+	_, err := repo.DB.Model(todoList).WherePK().Returning("*").Update()
+	return err
+}
+
+func (repo *TodoListRepository) DeleteById(todoListID uuid.UUID) error {
+	todoList := TodoLists{
+		ID: todoListID,
+	}
+	err := repo.DB.Delete(&todoList)
+	return err
 }

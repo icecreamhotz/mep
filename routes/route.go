@@ -27,6 +27,8 @@ func RouterTodoLists(router *gin.RouterGroup, handler controllers.TodoListHandle
 	{
 		todoListRoute.POST("/", handler.TodoListPost)
 		todoListRoute.GET("/", handler.TodoListGet)
+		todoListRoute.PUT("/:id", handler.TodoListPut)
+		todoListRoute.DELETE("/:id", handler.TodoListDelete)
 		todoListRoute.PATCH("/done/:id", handler.TodoListDonePatch)
 	}
 }

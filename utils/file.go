@@ -48,12 +48,10 @@ func ImageSaver(imageFile *multipart.FileHeader, path, imageName string, size ma
 		return err
 	}
 
-	baseDir, err := GetBaseDirectory()
+	baseDir, err := generateBaseDirSubImage(path)
 	if err != nil {
 		return err
 	}
-
-	baseDir = baseDir + "/public/" + path
 
 	err = createDirectoryIfNotExists(baseDir + "/original/")
 	if err != nil {
@@ -80,6 +78,26 @@ func ImageSaver(imageFile *multipart.FileHeader, path, imageName string, size ma
 		return err
 	}
 
+	return nil
+}
+
+func RemoveImageAllResolution(path, imageName string) error {
+	dir := []string{
+		"original",
+		"large",
+		"medium",
+		"small",
+	}
+	for _, subDir := range dir {
+		baseDir, err := generateBaseDirSubImage(path)
+		if err != nil {
+			return err
+		}
+		baseDir = baseDir + "/" + subDir + "/" + imageName
+		if _, err := os.Stat(baseDir); !os.IsNotExist(err) {
+			os.Remove(baseDir)
+		}
+	}
 	return nil
 }
 
@@ -125,4 +143,9 @@ func createDirectoryIfNotExists(dir string) error {
 	}
 
 	return nil
+}
+
+func generateBaseDirSubImage(path string) (string, error) {
+	baseDir, err := GetBaseDirectory()
+	return baseDir + "/public/images/" + path, err
 }

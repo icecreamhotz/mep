@@ -84,6 +84,111 @@ func (handler *TodoListHandler) TodoListPost(c *gin.Context) {
 	c.JSON(http.StatusCreated, utils.ResponseMessage("Created successful."))
 }
 
+func (handler *TodoListHandler) TodoListPut(c *gin.Context) {
+	var todoList models.TodoLists
+	if err := c.ShouldBind(&todoList); err != nil {
+		c.JSON(http.StatusUnprocessableEntity, utils.ResponseErrorValidation(handler.Validator, err))
+		return
+	}
+
+	todoListID := c.Param("id")
+	todoListUUID, err := uuid.FromString(todoListID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, utils.ResponseServerError("Please check your uuid again"))
+		return
+	}
+
+	oldTodoList, err := handler.Service.GetById(todoListUUID)
+	if err != nil {
+		if err == pg.ErrNoRows {
+			c.JSON(http.StatusNotFound, utils.ReponseNotFound("Todo list not found"))
+			return
+		}
+		c.JSON(http.StatusBadRequest, utils.ResponseServerError("Please check your uuid again"))
+		return
+	}
+
+	file := todoList.ImageFile
+	imageName := oldTodoList.Image
+	if file != nil {
+		filename := filepath.Base(file.Filename)
+		extension := filepath.Ext(filename)
+		message, ok := utils.ValidateExtension(extension, utils.DefaultExtension)
+		if !ok {
+			c.JSON(http.StatusConflict, utils.ResponseErrorFields([]map[string]string{{
+				"image": message,
+			}}))
+			return
+		}
+		message, ok = utils.ValidateFileSize(file.Size, 1)
+		if !ok {
+			c.JSON(http.StatusConflict, utils.ResponseErrorFields([]map[string]string{{
+				"image": message,
+			}}))
+			return
+		}
+		imageName = utils.GetTimeNowFormatYYYYMMDDHHIIMM() + extension
+		err := utils.ImageSaver(file, viper.GetString("base_dir.todo_list.path"), imageName, viper.GetStringMap("base_dir.todo_list.size"))
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, utils.ResponseServerError("Something went wrong."))
+			return
+		}
+		if oldTodoList.Image != "" {
+			err := utils.RemoveImageAllResolution(viper.GetString("base_dir.todo_list.path"), oldTodoList.Image)
+			if err != nil {
+				c.JSON(http.StatusInternalServerError, utils.ResponseServerError("Something went wrong."))
+				return
+			}
+		}
+	}
+	todoList.ID = todoListUUID
+	todoList.Image = imageName
+	todoList.CreatedAt = oldTodoList.CreatedAt
+	todoList.DeletedAt = oldTodoList.DeletedAt
+
+	err = handler.Service.Update(&todoList)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, utils.ResponseServerError("Something went wrong."))
+		return
+	}
+	c.JSON(http.StatusOK, utils.ResponseMessage("Updated successful."))
+}
+
+func (handler *TodoListHandler) TodoListDelete(c *gin.Context) {
+	todoListID := c.Param("id")
+
+	todoListUUID, err := uuid.FromString(todoListID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, utils.ResponseServerError("Please check your uuid again"))
+		return
+	}
+
+	oldTodoList, err := handler.Service.GetById(todoListUUID)
+	if err != nil {
+		if err == pg.ErrNoRows {
+			c.JSON(http.StatusNotFound, utils.ReponseNotFound("Todo list not found"))
+			return
+		}
+		c.JSON(http.StatusBadRequest, utils.ResponseServerError("Please check your uuid again"))
+		return
+	}
+
+	if oldTodoList.Image != "" {
+		err := utils.RemoveImageAllResolution(viper.GetString("base_dir.todo_list.path"), oldTodoList.Image)
+		if err != nil {
+			c.JSON(http.StatusInternalServerError, utils.ResponseServerError("Something went wrong."))
+			return
+		}
+	}
+
+	err = handler.Service.DeleteById(todoListUUID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, utils.ResponseServerError("Something went wrong."))
+		return
+	}
+	c.JSON(http.StatusNoContent, utils.ResponseMessage("Deleted successful."))
+}
+
 func (handler *TodoListHandler) TodoListDonePatch(c *gin.Context) {
 	todoListID := c.Param("id")
 
